@@ -24,6 +24,15 @@ export const LitElement = (superclass) => class extends superclass {
         this.__data = {};
         this._methodsToCall = {};
         this.attachShadow({ mode: "open" });
+
+        // Generate propertyName <-> attribute-name mappings
+        this._propAttr = new Map(); // propertyName   -> attribute-name
+        this._attrProp = new Map(); // attribute-name -> propertyName
+        for (let prop in this.constructor.properties) {
+            const attr  = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+            this._propAttr.set( prop, attr );
+            this._attrProp.set( attr, prop );
+        }
     }
 
     /**
@@ -47,6 +56,8 @@ export const LitElement = (superclass) => class extends superclass {
      * @param {any} info
      */
     _makeGetterSetter(prop, info) {
+        const attr  = this._propAttr.get( prop );
+
         Object.defineProperty(this, prop, {
             get() {
                 return this.__data[prop]
@@ -57,7 +68,7 @@ export const LitElement = (superclass) => class extends superclass {
                         console.warn('Rich Data shouldn\'t be set as attribte!')
                 if (typeof info === 'object') {
                     if (info.reflectToAttribute) {
-                        this.setAttribute(prop, val)
+                        this.setAttribute(attr, val)
                     } else this.__data[prop] = val;
                 } else this.__data[prop] = val;
                 this._propertiesChanged(prop, val)
@@ -79,7 +90,7 @@ export const LitElement = (superclass) => class extends superclass {
             }
         }
 
-        this[prop] = this.getAttribute(prop);
+        this[prop] = this.getAttribute( attr );
     }
 
     /**
@@ -100,11 +111,13 @@ export const LitElement = (superclass) => class extends superclass {
     /**
      * Gets called when an observed attribute changes. Calls `_propertiesChanged`
      * 
-     * @param {any} prop 
+     * @param {any} attr 
      * @param {any} old 
      * @param {any} val 
      */
-    attributeChangedCallback(prop, old, val) {
+    attributeChangedCallback(attr, old, val) {
+        const prop  = this._attrProp( attr );
+
         if (this[prop] !== val) {
             const { type } = this.constructor.properties[prop];
             switch( type.name ) {
@@ -114,12 +127,12 @@ export const LitElement = (superclass) => class extends superclass {
                  */
                 if (val === 'false' || val === 'null' ||
                     val === false   || val === null) {
-                    if (this.hasAttribute(prop)) {
-                        this.removeAttribute(prop);
+                    if (this.hasAttribute( attr )) {
+                        this.removeAttribute( attr );
                     }
                     this.__data[prop] = false
                 } else {
-                    this.__data[prop] = this.hasAttribute(prop);
+                    this.__data[prop] = this.hasAttribute( attr );
                 }
                 break;
 
@@ -128,8 +141,8 @@ export const LitElement = (superclass) => class extends superclass {
                  * ensure that the attribute is removed.
                  */
                 if (!val || val === 'null') {
-                    if (this.hasAttribute(prop)) {
-                        this.removeAttribute(prop);
+                    if (this.hasAttribute( attr )) {
+                        this.removeAttribute( attr );
                     }
                     this.__data[prop] = '';
 
