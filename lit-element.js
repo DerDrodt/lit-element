@@ -107,14 +107,47 @@ export const LitElement = (superclass) => class extends superclass {
     attributeChangedCallback(prop, old, val) {
         if (this[prop] !== val) {
             const { type } = this.constructor.properties[prop];
-            if (type.name === 'Boolean') {
-                if (val !== 'false') {
-                    this.__data[prop] = this.hasAttribute(prop);
-                } else {
+            switch( type.name ) {
+            case 'Boolean':
+                /* Ensure attribute values the indicate that absense of the
+                 * attribute actually cause the attribute to be absent.
+                 */
+                if (val === 'false' || val === 'null' ||
+                    val === false   || val === null) {
+                    if (this.hasAttribute(prop)) {
+                        this.removeAttribute(prop);
+                    }
                     this.__data[prop] = false
+                } else {
+                    this.__data[prop] = this.hasAttribute(prop);
                 }
-            } else this.__data[prop] = type(val);
-            this._propertiesChanged(prop, val);
+                break;
+
+            case 'String':
+                /* If a String value is falsey or the explicit 'null' string,
+                 * ensure that the attribute is removed.
+                 */
+                if (!val || val === 'null') {
+                    if (this.hasAttribute(prop)) {
+                        this.removeAttribute(prop);
+                    }
+                    this.__data[prop] = '';
+
+                } else {
+                    this.__data[prop] = type(val);
+
+                }
+                break;
+
+            default:
+                this.__data[prop] = type(val);
+                break;
+            }
+
+            /* Pass along the new, more concrete *property* value instead of
+             * the fuzzy attribute value.
+             */
+            this._propertiesChanged(prop, this.__data[prop]);
         }
     }
 
