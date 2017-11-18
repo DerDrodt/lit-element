@@ -1,6 +1,16 @@
 import { html, render as litRender } from '../lit-html/lit-html.js'
 
 /**
+ *  Convert a mixedLowerCase string to kebob-case.
+ *  @param  {String} str   The mixedLowerCase string
+ *
+ *  @return {String} The kebob-case version of `str`;
+ */
+function _kebobCase( str ) {
+  return str.replace(/([A-Z])/g, '-$1').toLowerCase();
+}
+
+/**
  * Returns a class with the Lit-Element features, that extends `superclass`.
  * @param {*} superclass
  */
@@ -15,7 +25,7 @@ export const LitElement = (superclass) => class extends superclass {
         let attrs = [];
         for (const prop in this.properties)
             if (this.properties[prop].reflectToAttribute)
-                attrs.push(prop)
+                attrs.push( _kebobCase( prop ) );
         return attrs;
     }
 
@@ -29,7 +39,7 @@ export const LitElement = (superclass) => class extends superclass {
         this._propAttr = new Map(); // propertyName   -> attribute-name
         this._attrProp = new Map(); // attribute-name -> propertyName
         for (let prop in this.constructor.properties) {
-            const attr  = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+            const attr  = _kebobCase( prop );
             this._propAttr.set( prop, attr );
             this._attrProp.set( attr, prop );
         }
