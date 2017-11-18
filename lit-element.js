@@ -62,16 +62,19 @@ export const LitElement = (superclass) => class extends superclass {
             get() {
                 return this.__data[prop]
             },
-            set(val) {
+            async set(val) {
+                const resolved  = (val != null && val instanceof Promise
+                                    ? await val
+                                    : val);
                 if (typeof info === 'object')
                     if (info.reflectToAttribute && (info.type === Object || info.type === Array))
                         console.warn('Rich Data shouldn\'t be set as attribte!')
                 if (typeof info === 'object') {
                     if (info.reflectToAttribute) {
-                        this.setAttribute(attr, val)
-                    } else this.__data[prop] = val;
-                } else this.__data[prop] = val;
-                this._propertiesChanged(prop, val)
+                        this.setAttribute(attr, resolved)
+                    } else this.__data[prop] = resolved;
+                } else this.__data[prop] = resolved;
+                this._propertiesChanged(prop, resolved)
             }
         });
 
