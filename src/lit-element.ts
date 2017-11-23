@@ -123,7 +123,8 @@ export const LitElement = (superclass: HTMLClass) => class extends superclass {
         });
 
         if (typeof info === 'object') {
-            if (info.type === Object || info.type === Array) {
+            if (info.reflectToAttribute &&
+                (info.type === Object || info.type === Array)) {
                 console.warn('Rich Data shouldn\'t be set as attribte!')
             }
             if (info.observer) {
