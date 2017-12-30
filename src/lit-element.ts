@@ -22,7 +22,7 @@ export interface data {
 }
 
 export interface methodsToCall {
-    [propName: string]: (value: any) => void;
+    [propName: string]: (newValue: any, oldValue: any) => void;
 }
 
 export interface HTMLCollectionByID {
@@ -118,7 +118,6 @@ export const LitElement = (superclass: HTMLClass) => class extends superclass {
                     /* Set the property directly and trigger
                      * _propertiesChanged()
                      */
-                    this.__data[prop] = resolved;
                     this._propertiesChanged(prop, resolved);
                 }
             }
@@ -158,13 +157,24 @@ export const LitElement = (superclass: HTMLClass) => class extends superclass {
      * Gets called when the properties change and the Element should rerender.
      *
      * @param {string} prop
-     * @param {any} val
+     * @param {any} newVal
      */
-    _propertiesChanged(prop: string, val: any) {
-        if (this._methodsToCall[prop]) {
-            this._methodsToCall[prop](val);
+    _propertiesChanged(prop: string, newVal: any) {
+        if (this.__data[prop] !== newVal) {
+            const oldVal    = this.__data[prop];
+            let   doRefresh = true;
+            this.__data[prop] = newVal;
+
+            if (this._methodsToCall[prop]) {
+                if (this._methodsToCall[prop](newVal, oldVal) === false) {
+                    doRefresh = false;
+                }
+            }
+
+            if (doRefresh) {
+                this.refresh();
+            }
         }
-        this.refresh();
     }
 
     /**
@@ -179,6 +189,8 @@ export const LitElement = (superclass: HTMLClass) => class extends superclass {
         const prop = this._attrProp.get(attr);
         if (this.__data[prop] !== val) {
             const { type } = this.constructor.properties[prop];
+            let   newVal   = val;
+
             switch (type.name) {
                 case 'Boolean':
                     /* Ensure attribute values the indicate that absense of the
@@ -189,9 +201,9 @@ export const LitElement = (superclass: HTMLClass) => class extends superclass {
                         if (this.hasAttribute(attr)) {
                             this.removeAttribute(attr);
                         }
-                        this.__data[prop] = false
+                        newVal = false;
                     } else {
-                        this.__data[prop] = this.hasAttribute(attr);
+                        newVal = this.hasAttribute(attr);
                     }
                     break;
 
@@ -203,23 +215,23 @@ export const LitElement = (superclass: HTMLClass) => class extends superclass {
                         if (this.hasAttribute(attr)) {
                             this.removeAttribute(attr);
                         }
-                        this.__data[prop] = '';
+                        newVal = '';
 
                     } else {
-                        this.__data[prop] = type(val);
+                        newVal = type(val);
 
                     }
                     break;
 
                 default:
-                    this.__data[prop] = type(val);
+                    newVal = type(val);
                     break;
             }
 
             /* Pass along the new, more concrete *property* value instead of
              * the fuzzy attribute value.
              */
-            this._propertiesChanged(prop, this.__data[prop]);
+            this._propertiesChanged(prop, newVal);
         }
     }
 
