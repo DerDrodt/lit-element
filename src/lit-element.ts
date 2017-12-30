@@ -47,7 +47,7 @@ export const LitElement = (superclass: HTMLClass) => class extends superclass {
     static properties: properties;
     __data: data = {};
     _methodsToCall: methodsToCall = {};
-    _wait: boolean;
+    _wait: any;
     afterFirstRender?: () => void;
     shadowRoot: ShadowRoot;
     _propAttr: Map<string, string>;
@@ -240,9 +240,16 @@ export const LitElement = (superclass: HTMLClass) => class extends superclass {
      *
      */
     refresh() {
-        if (!this._wait) {
-            litRender(this.render(), this.shadowRoot)
+        if (this._wait === true) { return }
+        if (this._wait) {
+            // Reset the throttle
+            clearTimeout( this._wait );
         }
+
+        this._wait = setTimeout( () => {
+            delete this._wait;
+            litRender(this.render(), this.shadowRoot)
+        }, 5)
     }
 
     /**
