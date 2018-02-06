@@ -144,11 +144,6 @@ export const LitLite =
             }
 
             connectedCallback() {
-                // @ts-ignore
-                if (typeof super.connectedCallback === 'function')
-                    //@ts-ignore
-                    super.connectedCallback();
-
                 const props = (this.constructor as any).properties;
                 this._wait = true;
                 for (let prop in props) {
