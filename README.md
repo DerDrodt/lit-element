@@ -1,5 +1,7 @@
 # lit-element
 
+## This project has now changed into [MoleculeJS](https://github.com/Molecule-JS/MoleculeJS) with a lot of additional features.
+
 [![Greenkeeper badge](https://badges.greenkeeper.io/DiiLord/lit-element.svg)](https://greenkeeper.io/)
 Implements [lit-html](https://github.com/PolymerLabs/lit-html) via a LitElement class. Made for custom Elements.
 
